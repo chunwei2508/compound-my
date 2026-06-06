@@ -1,346 +1,213 @@
 <!DOCTYPE html>
 <html lang="zh">
 <head>
-
 <meta charset="UTF-8">
-
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>Compound MY</title>
-
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-
 body{
-margin:0;
-padding:20px;
-background:#f4f6f5;
-font-family:-apple-system,BlinkMacSystemFont;
+    margin:0;
+    padding:20px;
+    background:#f4f6f5;
+    font-family:-apple-system,BlinkMacSystemFont;
 }
-
-h1{
-color:#0E7A53;
-}
-
+.dark{background:#111;color:white;}
+h1{color:#0E7A53;}
 .card{
-background:white;
-padding:20px;
-border-radius:22px;
-margin-bottom:20px;
-box-shadow:0 5px 15px #ddd;
+    background:white;
+    color:black;
+    padding:20px;
+    border-radius:24px;
+    margin-bottom:20px;
+    box-shadow:0 8px 20px #ddd;
 }
-
+.dark .card{background:#1c1c1e;color:white;box-shadow:none;}
 input{
-width:100%;
-padding:15px;
-margin:8px 0;
-border-radius:15px;
-border:1px solid #ccc;
-font-size:16px;
-box-sizing:border-box;
+    width:100%;
+    padding:15px;
+    margin:8px 0;
+    border-radius:15px;
+    border:1px solid #ccc;
+    font-size:16px;
+    box-sizing:border-box;
 }
-
 button{
-width:100%;
-padding:15px;
-background:#0E7A53;
-color:white;
-border:none;
-border-radius:15px;
-font-size:17px;
-margin-top:8px;
+    width:100%;
+    padding:15px;
+    background:#0E7A53;
+    color:white;
+    border:none;
+    border-radius:15px;
+    font-size:17px;
+    margin-top:8px;
 }
-
-.small button{
-width:48%;
-}
-
+.row{display:flex;gap:10px;}
+.row button{flex:1;}
 .money{
-color:#0E7A53;
-font-weight:bold;
-font-size:22px;
+    color:#0E7A53;
+    font-weight:bold;
+    font-size:24px;
 }
-
-.result{
-line-height:2;
-}
-
+.result{line-height:2;}
 </style>
-
 </head>
-
 
 <body>
 
-
 <h1>📈 Compound MY 🇲🇾</h1>
 
+<button onclick="toggleDark()">🌙 深色模式</button>
 
 <div class="card">
-
 <h2>财富复利计算器</h2>
 
-
 <input id="start" type="number" placeholder="本金 RM">
-
 <input id="monthly" type="number" placeholder="每月投资 RM">
-
 <input id="rate" type="number" placeholder="年收益率 %">
-
 <input id="years" type="number" placeholder="投资年数">
 
-
-<div class="small">
-
-<button onclick="setRate(5.5)">
-EPF 5.5%
-</button>
-
-<button onclick="setRate(10)">
-S&P500 10%
-</button>
-
+<div class="row">
+<button onclick="setRate(5.5)">EPF 5.5%</button>
+<button onclick="setRate(10)">S&P500 10%</button>
 </div>
 
-
-<button onclick="calculate()">
-开始计算
-</button>
-
+<button onclick="calculate()">开始计算</button>
 
 <div class="result" id="result"></div>
-
-
 <canvas id="chart"></canvas>
-
-
 </div>
-
-
-
 
 <div class="card">
-
 <h2>🔥 FIRE 财务自由</h2>
 
-
 <input id="expense" type="number" placeholder="每月生活费 RM">
+<input id="asset" type="number" placeholder="当前资产 RM">
+<input id="fireMonthly" type="number" placeholder="每月投资 RM">
+<input id="fireRate" type="number" placeholder="年收益率 %">
 
-
-<button onclick="fire()">
-计算 FIRE
-</button>
-
+<button onclick="fire()">计算 FIRE</button>
 
 <div id="fireResult"></div>
-
-
 </div>
 
+<div class="card">
+<h2>🇲🇾 EPF 60岁预测</h2>
 
+<input id="age" type="number" placeholder="当前年龄">
+<input id="epf" type="number" placeholder="当前 EPF 余额 RM">
+<input id="epfMonthly" type="number" placeholder="每月 EPF 存入 RM">
 
+<button onclick="epfCalc()">预测 EPF</button>
 
+<div id="epfResult"></div>
+</div>
 
 <script>
-
-
 let chart;
 
-
 function rm(x){
-
-return "RM " +
-
-x.toLocaleString(
-"en-MY",
-{
-maximumFractionDigits:0
-});
-
+    return "RM " + x.toLocaleString("en-MY",{maximumFractionDigits:0});
 }
-
-
 
 function setRate(x){
-
-document.getElementById("rate").value=x;
-
+    document.getElementById("rate").value=x;
 }
 
-
-
+function toggleDark(){
+    document.body.classList.toggle("dark");
+}
 
 function calculate(){
+    let start=Number(document.getElementById("start").value);
+    let monthly=Number(document.getElementById("monthly").value);
+    let rate=Number(document.getElementById("rate").value)/100;
+    let years=Number(document.getElementById("years").value);
 
+    let total=start;
+    let data=[];
+    let labels=[];
 
-let start=
-Number(document.getElementById("start").value);
+    for(let y=1;y<=years;y++){
+        for(let m=0;m<12;m++){
+            total=total*(1+rate/12)+monthly;
+        }
+        labels.push("Year "+y);
+        data.push(total);
+    }
 
+    let invested=start+(monthly*years*12);
+    let profit=total-invested;
+    let millionProgress=(total/1000000)*100;
 
-let monthly=
-Number(document.getElementById("monthly").value);
+    document.getElementById("result").innerHTML=`
+    <br>
+    总投入：<div class="money">${rm(invested)}</div>
+    复利收益：<div class="money">${rm(profit)}</div>
+    最终资产：<div class="money">${rm(total)}</div>
+    RM1,000,000 目标进度：<b>${millionProgress.toFixed(1)}%</b>
+    `;
 
+    if(chart){chart.destroy();}
 
-let rate=
-Number(document.getElementById("rate").value)/100;
-
-
-let years=
-Number(document.getElementById("years").value);
-
-
-
-let total=start;
-
-let data=[];
-
-let labels=[];
-
-
-
-for(let y=1;y<=years;y++){
-
-for(let m=0;m<12;m++){
-
-total=
-total*(1+rate/12)+monthly;
-
+    chart=new Chart(document.getElementById("chart"),{
+        type:"line",
+        data:{
+            labels:labels,
+            datasets:[{
+                label:"资产成长 RM",
+                data:data,
+                tension:0.35
+            }]
+        }
+    });
 }
-
-labels.push("Year "+y);
-
-data.push(total);
-
-}
-
-
-
-let invested=
-start+(monthly*years*12);
-
-
-let profit=
-total-invested;
-
-
-
-document.getElementById("result").innerHTML=
-
-`
-
-<br>
-
-总投入：
-
-<div class="money">
-${rm(invested)}
-</div>
-
-
-复利收益：
-
-<div class="money">
-${rm(profit)}
-</div>
-
-
-最终资产：
-
-<div class="money">
-${rm(total)}
-</div>
-
-
-百万目标：
-
-${((total/1000000)*100).toFixed(1)}%
-
-`;
-
-
-
-
-if(chart){
-
-chart.destroy();
-
-}
-
-
-chart=new Chart(
-
-document.getElementById("chart"),
-
-{
-
-type:"line",
-
-data:{
-
-labels:labels,
-
-datasets:[{
-
-label:"资产成长 RM",
-
-data:data
-
-}]
-
-}
-
-}
-
-);
-
-}
-
-
-
-
 
 function fire(){
+    let expense=Number(document.getElementById("expense").value);
+    let asset=Number(document.getElementById("asset").value);
+    let monthly=Number(document.getElementById("fireMonthly").value);
+    let rate=Number(document.getElementById("fireRate").value)/100;
 
+    let target=expense*12*25;
+    let gap=target-asset;
+    let months=0;
+    let total=asset;
 
-let expense=
+    while(total<target && months<1200){
+        total=total*(1+rate/12)+monthly;
+        months++;
+    }
 
-Number(document.getElementById("expense").value);
+    let yearsNeeded=months/12;
 
-
-
-let target=
-
-expense*12*25;
-
-
-
-document.getElementById("fireResult").innerHTML=
-
-`
-
-<h2>
-
-你的 FIRE 数字：
-
-</h2>
-
-
-<div class="money">
-
-${rm(target)}
-
-</div>
-
-
-`;
-
+    document.getElementById("fireResult").innerHTML=`
+    <h3>你的 FIRE 数字：</h3>
+    <div class="money">${rm(target)}</div>
+    还差：<div class="money">${rm(Math.max(gap,0))}</div>
+    预计达到 FIRE：<b>${yearsNeeded.toFixed(1)} 年</b>
+    `;
 }
 
+function epfCalc(){
+    let age=Number(document.getElementById("age").value);
+    let epf=Number(document.getElementById("epf").value);
+    let monthly=Number(document.getElementById("epfMonthly").value);
 
+    let years=60-age;
+    let total=epf;
+
+    for(let i=0;i<years*12;i++){
+        total=total*(1+0.055/12)+monthly;
+    }
+
+    document.getElementById("epfResult").innerHTML=`
+    <h3>60岁预计 EPF：</h3>
+    <div class="money">${rm(total)}</div>
+    `;
+}
 </script>
 
-
 </body>
-
 </html>
