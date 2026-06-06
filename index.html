@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>Compound MY</title>
+
+<style>
+body {
+    font-family: Arial;
+    padding:20px;
+    background:#f5f5f5;
+}
+
+.card {
+    background:white;
+    padding:20px;
+    border-radius:15px;
+}
+
+button {
+    background:#0E7A53;
+    color:white;
+    padding:15px;
+    border:0;
+    border-radius:10px;
+    width:100%;
+}
+</style>
+
+</head>
+
+<body>
+
+<h1>Compound MY 🇲🇾</h1>
+
+<div class="card">
+
+<h2>复利计算器</h2>
+
+<input id="money" placeholder="本金 RM">
+
+<br><br>
+
+<input id="rate" placeholder="年收益 %">
+
+<br><br>
+
+<input id="year" placeholder="投资年数">
+
+<br><br>
+
+<button onclick="calc()">计算</button>
+
+<h2 id="result"></h2>
+
+</div>
+
+
+<script>
+
+function calc(){
+
+let money =
+Number(document.getElementById("money").value);
+
+let rate =
+Number(document.getElementById("rate").value)/100;
+
+let year =
+Number(document.getElementById("year").value);
+
+
+let result =
+money * Math.pow(1+rate,year);
+
+
+document.getElementById("result").innerHTML =
+"未来资产 RM " + result.toFixed(2);
+
+}
+
+</script>
+
+</body>
+</html>
