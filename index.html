@@ -8,55 +8,62 @@
 
 <title>Compound MY</title>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <style>
 
 body{
-    margin:0;
-    padding:20px;
-    background:#f4f6f5;
-    font-family:-apple-system,BlinkMacSystemFont;
+margin:0;
+padding:20px;
+background:#f4f6f5;
+font-family:-apple-system,BlinkMacSystemFont;
 }
 
 h1{
-    color:#0E7A53;
+color:#0E7A53;
 }
 
 .card{
-    background:white;
-    padding:20px;
-    border-radius:20px;
-    margin-bottom:20px;
-    box-shadow:0 5px 15px #ddd;
+background:white;
+padding:20px;
+border-radius:22px;
+margin-bottom:20px;
+box-shadow:0 5px 15px #ddd;
 }
 
 input{
-    width:100%;
-    padding:15px;
-    margin:8px 0;
-    border-radius:12px;
-    border:1px solid #ccc;
-    font-size:16px;
-    box-sizing:border-box;
+width:100%;
+padding:15px;
+margin:8px 0;
+border-radius:15px;
+border:1px solid #ccc;
+font-size:16px;
+box-sizing:border-box;
 }
 
 button{
-    width:100%;
-    padding:15px;
-    background:#0E7A53;
-    color:white;
-    border:none;
-    border-radius:15px;
-    font-size:18px;
+width:100%;
+padding:15px;
+background:#0E7A53;
+color:white;
+border:none;
+border-radius:15px;
+font-size:17px;
+margin-top:8px;
 }
 
-.result{
-    font-size:18px;
-    line-height:1.8;
+.small button{
+width:48%;
 }
 
 .money{
-    color:#0E7A53;
-    font-weight:bold;
+color:#0E7A53;
+font-weight:bold;
+font-size:22px;
+}
+
+.result{
+line-height:2;
 }
 
 </style>
@@ -67,14 +74,12 @@ button{
 <body>
 
 
-<h1>
-Compound MY 🇲🇾
-</h1>
+<h1>📈 Compound MY 🇲🇾</h1>
 
 
 <div class="card">
 
-<h2>📈 复利计算器</h2>
+<h2>财富复利计算器</h2>
 
 
 <input id="start" type="number" placeholder="本金 RM">
@@ -86,15 +91,32 @@ Compound MY 🇲🇾
 <input id="years" type="number" placeholder="投资年数">
 
 
-<button onclick="compound()">
-计算财富增长
+<div class="small">
+
+<button onclick="setRate(5.5)">
+EPF 5.5%
+</button>
+
+<button onclick="setRate(10)">
+S&P500 10%
+</button>
+
+</div>
+
+
+<button onclick="calculate()">
+开始计算
 </button>
 
 
-<div class="result" id="compoundResult"></div>
+<div class="result" id="result"></div>
+
+
+<canvas id="chart"></canvas>
 
 
 </div>
+
 
 
 
@@ -105,104 +127,175 @@ Compound MY 🇲🇾
 
 <input id="expense" type="number" placeholder="每月生活费 RM">
 
+
 <button onclick="fire()">
 计算 FIRE
 </button>
 
 
-<div class="result" id="fireResult"></div>
+<div id="fireResult"></div>
 
 
 </div>
 
 
 
+
+
 <script>
+
+
+let chart;
 
 
 function rm(x){
 
-return "RM " + 
+return "RM " +
+
 x.toLocaleString(
 "en-MY",
 {
-maximumFractionDigits:2
+maximumFractionDigits:0
 });
 
 }
 
 
 
-function compound(){
+function setRate(x){
+
+document.getElementById("rate").value=x;
+
+}
 
 
-let start =
+
+
+function calculate(){
+
+
+let start=
 Number(document.getElementById("start").value);
 
 
-let monthly =
+let monthly=
 Number(document.getElementById("monthly").value);
 
 
-let rate =
+let rate=
 Number(document.getElementById("rate").value)/100;
 
 
-let years =
+let years=
 Number(document.getElementById("years").value);
 
 
 
 let total=start;
 
+let data=[];
 
-for(
-let i=0;
-i<years*12;
-i++
-){
+let labels=[];
 
-total =
+
+
+for(let y=1;y<=years;y++){
+
+for(let m=0;m<12;m++){
+
+total=
 total*(1+rate/12)+monthly;
 
 }
 
+labels.push("Year "+y);
 
-let invested =
-start + monthly*years*12;
+data.push(total);
+
+}
 
 
-let profit =
+
+let invested=
+start+(monthly*years*12);
+
+
+let profit=
 total-invested;
 
 
-document.getElementById("compoundResult").innerHTML =
+
+document.getElementById("result").innerHTML=
 
 `
+
 <br>
 
 总投入：
-<span class="money">
-${rm(invested)}
-</span>
 
-<br>
+<div class="money">
+${rm(invested)}
+</div>
+
 
 复利收益：
-<span class="money">
-${rm(profit)}
-</span>
 
-<br>
+<div class="money">
+${rm(profit)}
+</div>
+
 
 最终资产：
-<span class="money">
+
+<div class="money">
 ${rm(total)}
-</span>
+</div>
+
+
+百万目标：
+
+${((total/1000000)*100).toFixed(1)}%
 
 `;
 
+
+
+
+if(chart){
+
+chart.destroy();
+
 }
+
+
+chart=new Chart(
+
+document.getElementById("chart"),
+
+{
+
+type:"line",
+
+data:{
+
+labels:labels,
+
+datasets:[{
+
+label:"资产成长 RM",
+
+data:data
+
+}]
+
+}
+
+}
+
+);
+
+}
+
 
 
 
@@ -210,28 +303,35 @@ ${rm(total)}
 function fire(){
 
 
-let expense =
+let expense=
+
 Number(document.getElementById("expense").value);
 
 
-let target =
+
+let target=
+
 expense*12*25;
+
 
 
 document.getElementById("fireResult").innerHTML=
 
 `
-<br>
 
-你的 FIRE 目标：
+<h2>
 
-<br>
+你的 FIRE 数字：
 
-<span class="money">
+</h2>
+
+
+<div class="money">
 
 ${rm(target)}
 
-</span>
+</div>
+
 
 `;
 
